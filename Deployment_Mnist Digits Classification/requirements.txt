@@ -1,0 +1,7 @@
+flask>=3.0.0
+tensorflow>=2.11.0
+keras>=3.0.0
+pillow>=9.0.0
+numpy>=1.23.0
+python-dotenv>=1.0.0
+pytest>=8.0.0

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MNIST Vision — Handwritten Digit Recognition AI</title>
+    <meta name="description" content="Production-grade AI handwritten digit recognizer powered by deep neural networks. Upload or draw a digit to get real-time prediction and probability distribution.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Navigation Header -->
+        <header class="navbar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">MNIST<span class="highlight">Vision</span></span>
+                    <span class="brand-subtitle">Digit Recognition AI</span>
+                </div>
+            </div>
+            <div class="status-container">
+                <div id="statusIndicator" class="status-badge status-offline">
+                    <span class="status-dot"></span>
+                    <span id="statusText">Checking Model...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Hero Section -->
+            <section class="hero">
+                <div class="hero-tag"><i class="fa-solid fa-sparkles"></i> Deep Learning Inference Platform</div>
+                <h1 class="hero-title">Recognize handwritten digits <br><span class="gradient-text">with AI Precision</span></h1>
+                <p class="hero-description">Upload an image of a handwritten digit or draw directly on the canvas. Our trained artificial neural network classifies it instantly with complete probability breakdown.</p>
+            </section>
+
+            <!-- Main Interactive Card -->
+            <div class="workspace-grid">
+                <!-- Left Input Panel -->
+                <div class="card glass-card input-card">
+                    <!-- Tab Controls -->
+                    <div class="tab-header">
+                        <button id="tabUpload" class="tab-btn active" onclick="switchTab('upload')">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload Image
+                        </button>
+                        <button id="tabDraw" class="tab-btn" onclick="switchTab('draw')">
+                            <i class="fa-solid fa-pen-nib"></i> Draw Canvas
+                        </button>
+                    </div>
+
+                    <!-- Upload Tab Pane -->
+                    <div id="uploadPane" class="tab-pane active">
+                        <div id="dropZone" class="drop-zone" onclick="triggerFileInput()">
+                            <input type="file" id="fileInput" accept=".png, .jpg, .jpeg, .webp" style="display: none;" onchange="handleFileSelect(event)">
+                            <div class="drop-zone-content" id="dropZonePrompt">
+                                <div class="upload-icon-wrapper">
+                                    <i class="fa-solid fa-file-image"></i>
+                                </div>
+                                <h3>Drag & drop your image here</h3>
+                                <p>or <span class="browse-link">browse files</span> from your device</p>
+                                <span class="file-limits">Supported: PNG, JPG, JPEG, WEBP (Max 5 MB)</span>
+                            </div>
+                            <!-- Image Preview inside dropzone -->
+                            <div id="imagePreviewContainer" class="preview-container hidden">
+                                <div class="preview-frame">
+                                    <img id="imagePreview" src="" alt="Selected digit preview">
+                                    <div class="grid-overlay"></div>
+                                </div>
+                                <div class="file-meta">
+                                    <span id="metaFileName" class="file-name">digit.png</span>
+                                    <span id="metaFileSpecs" class="file-specs">28x28 px • 12 KB</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Drawing Tab Pane -->
+                    <div id="drawPane" class="tab-pane hidden">
+                        <div class="canvas-wrapper">
+                            <canvas id="digitCanvas" width="280" height="280"></canvas>
+                            <div class="canvas-hint">Draw a single digit (0–9) clearly in the center</div>
+                        </div>
+                        <div class="canvas-actions">
+                            <button class="btn btn-secondary" onclick="clearCanvas()">
+                                <i class="fa-solid fa-eraser"></i> Clear Canvas
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Action Controls -->
+                    <div class="card-footer">
+                        <button id="predictBtn" class="btn btn-primary btn-block" onclick="runPrediction()" disabled>
+                            <span id="btnText">✦ Predict Digit</span>
+                            <span id="btnSpinner" class="spinner hidden"></span>
+                        </button>
+                        <button id="resetBtn" class="btn btn-ghost" onclick="resetAllState()" style="display: none;">
+                            <i class="fa-solid fa-arrows-rotate"></i> Clear & Reset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Output / Result Panel -->
+                <div class="card glass-card result-card">
+                    <div id="emptyResultState" class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fa-solid fa-chart-simple"></i>
+                        </div>
+                        <h3>Prediction Results</h3>
+                        <p>Upload an image or draw a digit and click <strong>Predict Digit</strong> to view neural network inference details.</p>
+                    </div>
+
+                    <div id="activeResultState" class="result-content hidden">
+                        <!-- Primary Prediction Output -->
+                        <div class="prediction-header">
+                            <div class="predicted-digit-box">
+                                <span class="prediction-label">PREDICTED DIGIT</span>
+                                <div id="predictedDigit" class="digit-display">7</div>
+                            </div>
+                            <div class="confidence-box">
+                                <span class="prediction-label">CONFIDENCE</span>
+                                <div class="confidence-metric">
+                                    <span id="confidenceValue" class="confidence-number">98.42%</span>
+                                </div>
+                                <div class="confidence-bar-bg">
+                                    <div id="confidenceBarFill" class="confidence-bar-fill" style="width: 98.42%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Probability Distribution Chart -->
+                        <div class="probabilities-section">
+                            <h4 class="section-title"><i class="fa-solid fa-bars-staggered"></i> Probability Distribution (0–9)</h4>
+                            <div id="probabilityBars" class="probability-list">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <section id="historySection" class="history-section hidden">
+                <div class="history-header">
+                    <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Predictions</h3>
+                    <button class="btn-text" onclick="clearHistory()"><i class="fa-solid fa-trash-can"></i> Clear History</button>
+                </div>
+                <div id="historyGrid" class="history-grid">
+                    <!-- Dynamic cards inserted here -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>MNIST Vision AI Platform • Powered by TensorFlow, Keras & Flask</p>
+        </footer>
+    </div>
+
+    <!-- Error Toast Notification -->
+    <div id="toast" class="toast hidden">
+        <i class="fa-solid fa-circle-exclamation toast-icon"></i>
+        <div class="toast-body">
+            <strong id="toastTitle">Error</strong>
+            <p id="toastMessage">Something went wrong</p>
+        </div>
+        <button class="toast-close" onclick="hideToast()">&times;</button>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
