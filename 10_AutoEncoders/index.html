@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive MNIST Denoising Autoencoder powered by TensorFlow.js. Upload or draw digits and watch deep learning reconstruct clean images from noisy inputs in real-time.">
+  <title>MNIST Denoising Autoencoder — Neural Image Reconstruction</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- TensorFlow.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+</head>
+<body>
+
+  <!-- Site Header -->
+  <header class="site-header">
+    <div class="container nav-content">
+      <a href="#" class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span>Neural Denoiser</span>
+      </a>
+
+      <!-- Model Status Badge -->
+      <div id="model-status-badge" class="model-status-badge loading">
+        <span class="status-dot"></span>
+        <span id="model-status-text">Loading AI model...</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="container">
+        <div class="hero-badge">
+          <span>MNIST • DENOISING AUTOENCODER</span>
+        </div>
+        <h1 class="hero-title">Clean the Noise.<br>Reveal the Digit.</h1>
+        <p class="hero-subtitle">
+          Upload or draw a handwritten digit and watch a convolutional autoencoder reconstruct a clean, crisp digit directly inside your browser.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#workspace" class="btn btn-primary">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+            Start Denoising
+          </a>
+          <a href="#how-it-works" class="btn btn-secondary">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            How It Works
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Workspace Section -->
+    <section id="workspace" class="workspace-section">
+      <div class="container">
+
+        <!-- Input Mode Switcher -->
+        <div class="segmented-control">
+          <button id="tab-upload-btn" class="tab-btn active" type="button">
+            <span>📤 Upload Image</span>
+          </button>
+          <button id="tab-draw-btn" class="tab-btn" type="button">
+            <span>✏️ Draw Digit</span>
+          </button>
+        </div>
+
+        <div class="workspace-grid">
+          
+          <!-- Workspace Main Panel -->
+          <div class="workspace-main">
+            <div class="glass-card input-panel">
+              
+              <!-- Tab 1: Upload Image -->
+              <div id="tab-content-upload" class="tab-content active">
+                <div id="file-dropzone" class="dropzone">
+                  <div class="dropzone-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="17 8 12 3 7 8"/>
+                      <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                  </div>
+                  <h3 class="dropzone-title">Upload a handwritten digit</h3>
+                  <p class="dropzone-subtitle">Drop an image here or browse your device</p>
+                  <span class="dropzone-formats">PNG, JPG, JPEG (Max 10MB)</span>
+                  <input type="file" id="file-input" class="upload-file-input" accept="image/png, image/jpeg, image/jpg">
+                </div>
+
+                <!-- Upload Preview Container -->
+                <div id="upload-preview-container" class="upload-preview-container" style="display: none;">
+                  <div class="upload-img-wrapper">
+                    <img id="upload-img-preview" src="" alt="Uploaded Handwritten Digit">
+                  </div>
+                  <div class="file-info">
+                    <span id="file-name">digit.png</span>
+                    <span id="file-size">14 KB</span>
+                  </div>
+                  <button id="remove-file-btn" class="btn btn-danger" type="button">
+                    Remove Image
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tab 2: Draw Digit -->
+              <div id="tab-content-draw" class="tab-content">
+                <div class="canvas-wrapper">
+                  <div class="canvas-container">
+                    <canvas id="drawing-canvas"></canvas>
+                    <div id="canvas-placeholder" class="canvas-placeholder">Draw a digit here</div>
+                  </div>
+
+                  <div class="canvas-controls">
+                    <div class="brush-control">
+                      <label for="brush-size-slider">Brush Size:</label>
+                      <input type="range" id="brush-size-slider" min="5" max="30" value="15">
+                      <span id="brush-size-val" class="brush-size-val">15px</span>
+                    </div>
+
+                    <button id="clear-canvas-btn" class="btn btn-secondary" type="button">
+                      Clear Canvas
+                    </button>
+                    <button id="undo-btn" class="btn btn-secondary" type="button">
+                      Undo
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Action Controls -->
+            <div class="action-area">
+              <button id="run-denoiser-btn" class="btn btn-primary btn-run" type="button" disabled>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Run Denoiser
+              </button>
+
+              <button id="clear-all-btn" class="btn btn-secondary" type="button">
+                Clear Everything
+              </button>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="loading-state">
+              <div class="spinner"></div>
+              <span>Running neural reconstruction...</span>
+            </div>
+
+          </div>
+
+          <!-- Sidebar Previews & Noise Control -->
+          <div class="sidebar-panel">
+            
+            <!-- Preprocessed Input Previews -->
+            <div class="glass-card">
+              <div class="panel-header">
+                <h3 class="panel-title">Model Input Preview</h3>
+              </div>
+
+              <div class="preview-grid">
+                <div class="preview-box">
+                  <span class="preview-label">Clean (28×28)</span>
+                  <div class="preview-canvas-wrapper">
+                    <canvas id="model-input-canvas" width="28" height="28"></canvas>
+                  </div>
+                </div>
+
+                <div class="preview-box">
+                  <span class="preview-label">Noisy (28×28)</span>
+                  <div class="preview-canvas-wrapper">
+                    <canvas id="noisy-preview-canvas" width="28" height="28"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gaussian Noise Control Card -->
+            <div class="glass-card noise-control-card">
+              <div class="noise-header">
+                <h3 class="panel-title">Noise Intensity</h3>
+                <span id="noise-val" class="noise-val">0.30</span>
+              </div>
+
+              <input type="range" id="noise-slider" min="0.00" max="0.60" step="0.02" value="0.30">
+
+              <p class="noise-help">
+                Higher values introduce controlled Gaussian noise N(0, σ²) before neural network inference.
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Results Section -->
+    <section id="results-section" class="results-section" style="display: none;">
+      <div class="container">
+        <h2 class="section-title">Reconstruction Results</h2>
+        <p class="section-subtitle">Comparing the clean digit, corrupted input, and autoencoder output.</p>
+
+        <!-- 3 Result Cards Grid -->
+        <div class="results-grid">
+          
+          <!-- Card 1: Original -->
+          <div class="glass-card result-card">
+            <span id="res-original-label" class="result-tag">ORIGINAL INPUT</span>
+            <div class="result-canvas-container">
+              <canvas id="res-original-canvas" width="28" height="28"></canvas>
+            </div>
+            <p class="result-desc">Your original handwritten digit input.</p>
+          </div>
+
+          <!-- Card 2: Noisy Input -->
+          <div class="glass-card result-card card-noisy">
+            <span class="result-tag">NOISY INPUT</span>
+            <div class="result-canvas-container">
+              <canvas id="res-noisy-canvas" width="28" height="28"></canvas>
+            </div>
+            <p class="result-desc">Gaussian noise corruption applied before inference.</p>
+          </div>
+
+          <!-- Card 3: Denoised Output -->
+          <div class="glass-card result-card card-denoised">
+            <span class="result-tag">DENOISED OUTPUT</span>
+            <div class="result-canvas-container">
+              <canvas id="res-denoised-canvas" width="28" height="28"></canvas>
+            </div>
+            <p class="result-desc">Reconstructed by the convolutional autoencoder.</p>
+          </div>
+
+        </div>
+
+        <div style="text-align: center;">
+          <div id="mse-metric" class="metric-badge">Reconstruction MSE: 0.00000</div>
+        </div>
+
+        <!-- Before / After Interactive Slider -->
+        <div class="glass-card comparison-card">
+          <h3 class="panel-title" style="text-align: center; margin-bottom: 0.5rem;">Before vs After Comparison</h3>
+          <p class="section-subtitle" style="margin-bottom: 1rem;">Drag the divider line to compare original digit with the reconstructed output.</p>
+
+          <div class="comparison-wrapper">
+            <div class="comp-img">
+              <canvas id="comp-original-canvas" width="28" height="28"></canvas>
+            </div>
+            <div id="comp-overlay" class="comp-overlay">
+              <div class="comp-img">
+                <canvas id="comp-denoised-canvas" width="28" height="28"></canvas>
+              </div>
+            </div>
+            <div id="comp-slider-handle" class="comp-slider-handle">
+              <div class="handle-btn">↔</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Empty State -->
+    <div id="results-empty" class="container">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>
+          </svg>
+        </div>
+        <h3 class="empty-title">Your neural canvas is ready</h3>
+        <p class="empty-subtitle">Upload an image or draw a digit above, then click "Run Denoiser".</p>
+      </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="workspace-section" style="margin-top: 5rem;">
+      <div class="container">
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">Understanding the 4-stage neural image reconstruction pipeline.</p>
+
+        <div class="steps-grid">
+          <div class="glass-card step-card">
+            <span class="step-num">01</span>
+            <h3 class="step-title">INPUT</h3>
+            <p class="step-desc">The digit is captured, converted to grayscale, and normalized to a 28×28 float array [0.0, 1.0].</p>
+          </div>
+
+          <div class="glass-card step-card">
+            <span class="step-num">02</span>
+            <h3 class="step-title">CORRUPT</h3>
+            <p class="step-desc">Controlled Gaussian noise is added to simulate sensor noise, degradation, or pixel corruption.</p>
+          </div>
+
+          <div class="glass-card step-card">
+            <span class="step-num">03</span>
+            <h3 class="step-title">ENCODE</h3>
+            <p class="step-desc">Convolutional layers compress the 28×28 input into a compact 7×7×8 latent representation feature map.</p>
+          </div>
+
+          <div class="glass-card step-card">
+            <span class="step-num">04</span>
+            <h3 class="step-title">RECONSTRUCT</h3>
+            <p class="step-desc">Transposed/UpSampling decoder layers filter out noise and reconstruct clean digit strokes with Sigmoid activation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Autoencoder Architecture Diagram -->
+    <section class="workspace-section">
+      <div class="container">
+        <h2 class="section-title">Autoencoder Architecture</h2>
+        <p class="section-subtitle">Verified network topology from pre-trained Keras model <code>denoising.h5</code>.</p>
+
+        <div class="glass-card arch-container">
+          <div class="arch-node">
+            <div class="arch-node-title">INPUT</div>
+            <div class="arch-node-dim">28 × 28 × 1</div>
+          </div>
+          <span class="arch-arrow">→</span>
+          <div class="arch-node">
+            <div class="arch-node-title">CONV + POOL</div>
+            <div class="arch-node-dim">14 × 14 × 32</div>
+          </div>
+          <span class="arch-arrow">→</span>
+          <div class="arch-node bottleneck">
+            <div class="arch-node-title">BOTTLENECK</div>
+            <div class="arch-node-dim">7 × 7 × 8</div>
+          </div>
+          <span class="arch-arrow">→</span>
+          <div class="arch-node">
+            <div class="arch-node-title">CONV + UP</div>
+            <div class="arch-node-dim">14 × 14 × 8</div>
+          </div>
+          <span class="arch-arrow">→</span>
+          <div class="arch-node">
+            <div class="arch-node-title">CONV + UP</div>
+            <div class="arch-node-dim">28 × 28 × 32</div>
+          </div>
+          <span class="arch-arrow">→</span>
+          <div class="arch-node">
+            <div class="arch-node-title">OUTPUT</div>
+            <div class="arch-node-dim">28 × 28 × 1</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Model Insights Section -->
+    <section class="workspace-section">
+      <div class="container">
+        <h2 class="section-title">Model Insights</h2>
+        <p class="section-subtitle">Empirical metadata verified directly from the trained neural network.</p>
+
+        <div class="insights-grid">
+          <div class="insight-card">
+            <div class="insight-label">MODEL TYPE</div>
+            <div class="insight-value">Convolutional Autoencoder</div>
+          </div>
+
+          <div class="insight-card">
+            <div class="insight-label">TOTAL PARAMETERS</div>
+            <div class="insight-value">6,427 (25.1 KB)</div>
+          </div>
+
+          <div class="insight-card">
+            <div class="insight-label">INPUT SHAPE</div>
+            <div class="insight-value">1 × 28 × 28 × 1</div>
+          </div>
+
+          <div class="insight-card">
+            <div class="insight-label">OUTPUT ACTIVATION</div>
+            <div class="insight-value">Sigmoid [0.0, 1.0]</div>
+          </div>
+
+          <div class="insight-card">
+            <div class="insight-label">LATENT REPRESENTATION</div>
+            <div class="insight-value">7 × 7 × 8 (392 features)</div>
+          </div>
+
+          <div class="insight-card">
+            <div class="insight-label">INFERENCE ENGINE</div>
+            <div class="insight-value">TensorFlow.js (Browser)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div>
+        <strong>MNIST Denoising Autoencoder</strong>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">An interactive demonstration of deep learning image reconstruction.</p>
+      </div>
+
+      <div class="footer-links">
+        <a href="#workspace">Workspace</a>
+        <a href="#how-it-works">How It Works</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- App Scripts -->
+  <script src="js/model.js"></script>
+  <script src="js/image-processing.js"></script>
+  <script src="js/drawing.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

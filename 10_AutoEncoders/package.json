@@ -1,0 +1,21 @@
+{
+  "name": "mnist-denoising-autoencoder",
+  "version": "1.0.0",
+  "description": "Production web application for MNIST Denoising Autoencoder using TensorFlow.js for in-browser client inference.",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "serve": "npx serve ."
+  },
+  "keywords": [
+    "mnist",
+    "autoencoder",
+    "denoising",
+    "tensorflowjs",
+    "deep-learning",
+    "keras",
+    "neural-network"
+  ],
+  "author": "Antigravity AI",
+  "license": "MIT"
+}
