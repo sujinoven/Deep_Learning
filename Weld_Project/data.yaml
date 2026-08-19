@@ -1,0 +1,9 @@
+path: datasets
+train: train/images
+val: valid/images
+test: test/images
+ 
+names:
+  0: Bad Weld
+  1: Good Weld
+  2: Defect

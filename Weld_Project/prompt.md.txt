@@ -1,0 +1,730 @@
+# Build a Localhost Web App for YOLO Weld Quality Detection
+
+## Role
+
+Act as a senior full-stack developer and computer-vision engineer.
+
+I already have a working YOLO-based Python application for detecting **good welds and bad welds**. I want you to convert/integrate my existing YOLO detection code into a professional web application that runs completely on my local machine.
+
+Do **not** replace my YOLO model or detection logic unnecessarily. First inspect the existing project files and understand how my current YOLO inference code works, then integrate it into the web application.
+
+---
+
+## Project Goal
+
+Build a web application for **weld quality inspection using YOLO**.
+
+The application should allow the user to detect whether a weld is:
+
+* **Good Weld**
+* **Bad Weld**
+
+The user should be able to perform detection in two ways:
+
+1. **Upload an image**
+2. **Open the webcam and perform real-time detection**
+
+The application must run locally on **localhost**.
+
+---
+
+# 1. Before Coding
+
+First inspect the existing project.
+
+Identify:
+
+* Existing Python files
+* YOLO model file (`.pt`)
+* Current inference/detection code
+* Class names
+* Existing image-processing logic
+* Existing dependencies
+* Input/output format
+* How bounding boxes are currently generated
+* Whether confidence thresholds are already defined
+
+Do not duplicate existing logic if it can be reused.
+
+If the current YOLO code already works, preserve it and wrap it inside a clean backend/API.
+
+---
+
+# 2. Recommended Technology
+
+Use:
+
+### Backend
+
+* Python
+* FastAPI
+* Uvicorn
+* Ultralytics YOLO
+* OpenCV
+
+### Frontend
+
+* React
+* Vite
+* Modern CSS
+* Clean responsive UI
+
+If the existing project already uses another reasonable web framework, you may integrate with it instead of unnecessarily changing the architecture.
+
+The entire application must work locally.
+
+---
+
+# 3. Main UI
+
+Create a professional industrial-style weld inspection dashboard.
+
+The homepage should have:
+
+### Header
+
+Title:
+
+**AI Weld Quality Inspection**
+
+Subtitle:
+
+**YOLO-Based Automated Weld Detection**
+
+Add a small status indicator:
+
+🟢 **Model Ready**
+
+when the YOLO model is successfully loaded.
+
+---
+
+# 4. Detection Modes
+
+Provide two prominent options:
+
+### Option A — Upload Image
+
+Button:
+
+**Upload Weld Image**
+
+The user should be able to select an image from their computer.
+
+Supported formats:
+
+* JPG
+* JPEG
+* PNG
+* WEBP
+
+After uploading:
+
+1. Send the image to the backend.
+2. Run YOLO inference.
+3. Return the detection result.
+4. Display the annotated image.
+5. Display the detected weld classification.
+6. Display confidence score.
+7. Display bounding boxes.
+
+---
+
+### Option B — Webcam
+
+Button:
+
+**Open Webcam**
+
+When clicked:
+
+* Ask for browser camera permission.
+* Display the live webcam feed.
+* Send frames to the backend/model appropriately.
+* Run YOLO detection.
+* Display bounding boxes and weld classification.
+* Display confidence score.
+* Allow the user to stop the webcam.
+
+Button:
+
+**Stop Camera**
+
+The webcam must be released properly when stopped.
+
+Do not leave the webcam running in the background.
+
+---
+
+# 5. Detection Result
+
+The result section should clearly communicate the weld quality.
+
+For example:
+
+### Good Weld
+
+Display prominently:
+
+**GOOD WELD**
+
+and:
+
+**Confidence: 94.2%**
+
+### Bad Weld
+
+Display prominently:
+
+**BAD WELD**
+
+and:
+
+**Confidence: 91.7%**
+
+Use clear visual differentiation between the two statuses.
+
+Do not rely only on color. Include text/icons so the result remains understandable.
+
+---
+
+# 6. Bounding Boxes
+
+Display YOLO bounding boxes on the image/video.
+
+Each detection should show:
+
+```text
+Class Name
+Confidence
+```
+
+Example:
+
+```text
+Good Weld
+0.94
+```
+
+or:
+
+```text
+Bad Weld
+0.91
+```
+
+Use the actual class names returned by my YOLO model rather than hard-coding them if possible.
+
+---
+
+# 7. Detection Information Panel
+
+Create a side panel or result card showing:
+
+### Inspection Result
+
+* Weld Status
+* Confidence
+* Number of detections
+* Detected class
+* Bounding box information if useful
+
+Example:
+
+```text
+Inspection Result
+-------------------------
+Status: GOOD WELD
+Confidence: 94.2%
+Detections: 1
+Class: Good Weld
+```
+
+If multiple welds are detected, show the result for each detection.
+
+---
+
+# 8. Image Upload Experience
+
+Make the upload area user-friendly.
+
+Include:
+
+**Drag & Drop Image**
+
+or:
+
+**Browse Files**
+
+After upload, show:
+
+* Original image
+* Processed/annotated image
+* Detection result
+
+Provide a:
+
+**Clear / Reset**
+
+button so the user can perform another inspection.
+
+---
+
+# 9. Webcam Experience
+
+The webcam interface should show:
+
+```text
+LIVE WELD INSPECTION
+
+[ Webcam Feed ]
+
+Detection:
+GOOD WELD
+
+Confidence:
+94.2%
+
+[ Stop Camera ]
+```
+
+If possible, display the YOLO bounding boxes directly over the video.
+
+The UI should clearly indicate:
+
+**Camera Active**
+
+while the camera is running.
+
+---
+
+# 10. Backend API
+
+Create clean API endpoints.
+
+For example:
+
+```text
+GET  /health
+POST /predict
+```
+
+`/health` should return whether the backend and YOLO model are ready.
+
+`/predict` should:
+
+1. Receive an uploaded image.
+2. Run YOLO inference.
+3. Process detections.
+4. Return structured JSON.
+5. Return an annotated image or a way for the frontend to display it.
+
+Example response structure:
+
+```json
+{
+  "success": true,
+  "detections": [
+    {
+      "class_id": 0,
+      "class_name": "Good Weld",
+      "confidence": 0.94,
+      "bbox": {
+        "x1": 100,
+        "y1": 80,
+        "x2": 300,
+        "y2": 250
+      }
+    }
+  ],
+  "overall_result": "Good Weld"
+}
+```
+
+Adapt this structure to the actual classes and output produced by my existing model.
+
+---
+
+# 11. YOLO Integration
+
+Use my existing YOLO model.
+
+Do not train a new model.
+
+Do not change the model unless necessary.
+
+Load the model once when the backend starts rather than loading the `.pt` file for every request.
+
+For example, conceptually:
+
+```python
+model = YOLO("my_model.pt")
+```
+
+Then reuse the model for inference.
+
+Find the actual `.pt` filename in my existing project before implementing this.
+
+---
+
+# 12. Confidence Threshold
+
+Use a configurable confidence threshold.
+
+For example:
+
+```text
+CONFIDENCE_THRESHOLD = 0.50
+```
+
+Do not blindly hard-code 0.50 if my existing code already has a threshold.
+
+Prefer:
+
+```text
+0.25–0.50
+```
+
+depending on the existing project configuration.
+
+If practical, expose the confidence threshold in the UI as a slider.
+
+Example:
+
+```text
+Confidence Threshold
+[---------●------]
+50%
+```
+
+Changing the threshold should affect displayed detections.
+
+---
+
+# 13. Error Handling
+
+Handle these cases gracefully:
+
+### No image uploaded
+
+Show:
+
+**Please upload a weld image.**
+
+### Invalid file
+
+Show:
+
+**Unsupported image format. Please upload JPG, JPEG, PNG, or WEBP.**
+
+### No weld detected
+
+Show:
+
+**No weld detected in this image.**
+
+Do not incorrectly label an image as good or bad if the model did not detect a weld.
+
+### Camera unavailable
+
+Show:
+
+**Unable to access camera. Please check browser permissions and ensure no other application is using the camera.**
+
+### Model unavailable
+
+Show:
+
+**YOLO model could not be loaded. Please check the model file path.**
+
+### Backend unavailable
+
+Show:
+
+**Unable to connect to the detection server.**
+
+---
+
+# 14. UI Design
+
+Make the interface look like a professional **industrial AI inspection system**, not a basic student project.
+
+Design characteristics:
+
+* Clean
+* Modern
+* Professional
+* Minimal
+* Responsive
+* Easy to understand
+* Suitable for a manufacturing/quality-control environment
+
+Suggested layout:
+
+```text
+-----------------------------------------------------
+| AI WELD QUALITY INSPECTION          Model Ready   |
+-----------------------------------------------------
+
+|                 |                                |
+|   Upload Image  |        Detection Result        |
+|                 |                                |
+|   Open Webcam   |        GOOD WELD               |
+|                 |        Confidence: 94.2%       |
+|                 |                                |
+|                 |        [Annotated Image]       |
+|                 |                                |
+-----------------------------------------------------
+```
+
+Use cards, rounded corners, subtle shadows, good spacing, and readable typography.
+
+Avoid excessive animations.
+
+---
+
+# 15. Detection History
+
+If practical, add a simple local inspection history.
+
+Show recent inspections:
+
+```text
+Time        Result       Confidence
+------------------------------------
+13:42       GOOD WELD    94.2%
+13:40       BAD WELD     91.8%
+13:38       GOOD WELD    88.4%
+```
+
+This does not need a database initially.
+
+Store it temporarily in frontend state or local storage.
+
+---
+
+# 16. Statistics
+
+Add a small dashboard showing:
+
+```text
+Total Inspections
+Good Welds
+Bad Welds
+Average Confidence
+```
+
+Example:
+
+```text
+Total Inspections       25
+Good Welds              20
+Bad Welds                5
+Average Confidence     91.4%
+```
+
+These statistics should update as inspections are performed.
+
+---
+
+# 17. Webcam Performance
+
+Do not unnecessarily send every raw webcam frame to the backend if that causes performance problems.
+
+Design the webcam inference efficiently.
+
+Possible approach:
+
+* Capture webcam frames in the browser.
+* Resize frames before sending them.
+* Run inference at a reasonable interval.
+* Avoid overlapping requests.
+* Display the most recent detection result.
+
+The goal is a smooth local demo rather than maximum FPS.
+
+If the existing YOLO/OpenCV application already performs webcam inference locally in Python, consider whether it is better to keep inference in Python and stream annotated frames to the frontend.
+
+Choose the simplest reliable architecture after inspecting the existing code.
+
+---
+
+# 18. Localhost Requirements
+
+The application must run locally.
+
+Use a structure similar to:
+
+```text
+project/
+│
+├── backend/
+│   ├── main.py
+│   ├── ...
+│
+├── frontend/
+│   ├── src/
+│   ├── package.json
+│   └── ...
+│
+├── models/
+│   └── yolov8n.pt / my_model.pt
+│
+├── requirements.txt
+└── README.md
+```
+
+Adapt the structure to my existing project instead of unnecessarily moving files.
+
+---
+
+# 19. CORS
+
+Configure CORS correctly so that the React frontend can communicate with the FastAPI backend during local development.
+
+For example:
+
+```text
+Frontend:
+http://localhost:5173
+
+Backend:
+http://localhost:8000
+```
+
+Do not use production infrastructure.
+
+---
+
+# 20. Run Instructions
+
+Create a clear `README.md`.
+
+It should explain:
+
+### Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Then explain how to open the application in the browser.
+
+Use the actual commands and ports generated by the project.
+
+---
+
+# 21. Important Development Rules
+
+Before modifying anything:
+
+1. Inspect my existing code.
+2. Identify the existing YOLO model.
+3. Understand the existing class names.
+4. Reuse my working inference logic.
+5. Avoid unnecessary changes to the model.
+6. Keep the project easy to understand because this is also a portfolio/interview project.
+7. Add comments where the YOLO integration may be difficult to understand.
+8. Keep frontend and backend code clean and modular.
+9. Do not hard-code fake detection results.
+10. Do not create mock YOLO predictions.
+11. The UI must display the actual predictions from my model.
+
+---
+
+# 22. Final Testing
+
+After implementation, test all of the following:
+
+### Image
+
+* Upload valid image.
+* Detect good weld.
+* Detect bad weld.
+* Test image with no weld.
+* Test invalid file.
+* Test multiple detections.
+
+### Webcam
+
+* Open webcam.
+* Detect weld in live video.
+* Display bounding boxes.
+* Display confidence.
+* Stop webcam.
+* Confirm camera is released.
+
+### Backend
+
+* `/health` works.
+* `/predict` works.
+* Invalid requests return useful errors.
+* YOLO model loads successfully.
+
+### Frontend
+
+* No console errors.
+* No broken API calls.
+* Responsive layout.
+* Clear loading state.
+* Clear error state.
+* Reset works.
+
+---
+
+# 23. Do Not Stop at Creating Files
+
+After creating the application:
+
+1. Install required dependencies.
+2. Start the backend.
+3. Start the frontend.
+4. Test the application locally.
+5. Fix any runtime errors.
+6. Verify that the actual YOLO model performs inference.
+7. Verify image upload.
+8. Verify webcam functionality.
+9. Verify bounding boxes and confidence labels.
+10. Only then consider the implementation complete.
+
+If a dependency or package is missing, install it and continue.
+
+---
+
+# Final Objective
+
+I want a working localhost application where I can open the browser and see:
+
+**AI Weld Quality Inspection**
+
+Then I can choose:
+
+**[ Upload Image ]**
+
+or
+
+**[ Open Webcam ]**
+
+The application should use my **actual YOLO model** to detect:
+
+**GOOD WELD / BAD WELD**
+
+and display:
+
+* Bounding box
+* Class name
+* Confidence score
+* Overall weld result
+* Inspection statistics
+
+Build this as a polished, professional portfolio-quality application while keeping the architecture simple enough for me to explain in an interview.
