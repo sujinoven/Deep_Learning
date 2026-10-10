@@ -137,3 +137,10 @@ logs/
 credentials.json
 secrets.json
 service-account*.json
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Python cache files
+__pycache__/
+*.py[cod]
